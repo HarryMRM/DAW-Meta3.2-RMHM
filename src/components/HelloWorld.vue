@@ -11,22 +11,23 @@
         </v-col>
 
         <v-col cols="auto">
-          <v-btn
+          <router-link to="/login">
+            <v-btn
             color="primary"
-            href="https://vuetifyjs.com/introduction/why-vuetify/#feature-guides"
             min-width="228"
             rel="noopener noreferrer"
             size="x-large"
             target="_blank"
             variant="flat"
-          >
+            >
             <v-icon
               icon="mdi mdi-currency-usd"
               size="large"
               start
             />
-          Apoyar
-          </v-btn>
+            Apoyar
+            </v-btn>
+          </router-link>
         </v-col>
       </v-row>
     </v-responsive>

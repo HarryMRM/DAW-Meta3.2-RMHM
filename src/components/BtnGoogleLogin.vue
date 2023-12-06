@@ -4,8 +4,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const googleLoginBtn = ref(null);
+let token = null;
+let tokenExpirationTimer = null;
+
 onMounted(() => {
     window.google.accounts.id.initialize({
         client_id: "176211644853-fnua99b0b5dn52jfs7cru2ukip2b1cos.apps.googleusercontent.com",
@@ -39,13 +45,49 @@ function parseJwt(token) {
     return JSON.parse(jsonPayload);
 }
 
-function onSuccess(googleUser) {
-    //const user = parseJwt(googleUser.credential)
-    console.log(googleUser.credential);
-    /* const name = user.name
-    const imgURL = user.picture
-    const email = user.email
-    const id_token = googleUser.credential */
+function setTokenExpirationTimer(expirationTime) {
+    const timeUntilExpiration = expirationTime * 1000;
+    tokenExpirationTimer = setTimeout(() => {
+        router.push('/Login');
+        console.log('Token ha expirado');
+    }, timeUntilExpiration);
+}
+
+
+async function onSuccess(googleUser) {
+    // Enviar la credencial al backend usando fetch
+    try {
+        const response = await fetch('https://localhost:3000/auth/verificarToken', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                credential: googleUser.credential,
+            }),
+        });
+
+        if (response.ok) {
+            const responseData = await response.json();
+            console.log('Respuesta del backend:', responseData);
+
+            token = responseData.jwtToken;
+            localStorage.setItem('jwtToken', token);
+            const decodedToken = parseJwt(token);
+            const expirationTime = decodedToken.expiresIn;
+
+            
+            if (tokenExpirationTimer) {
+                clearTimeout(tokenExpirationTimer);
+            }
+            setTokenExpirationTimer(expirationTime);
+            router.push('/TablaPersonas');
+        } else {
+            console.error('Error en la solicitud al backend:', response.status);
+        }
+    } catch (error) {
+        console.error('Error al enviar la credencial al backend:', error);
+    }
 }
 </script>
 <style>
